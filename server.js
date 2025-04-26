@@ -4,19 +4,18 @@ dotenv.config();
 
 const app = express();
 
-// Middleware to parse query parameters
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Root route
+// Root Route (styled welcome page)
 app.get('/', (req, res) => {
     res.send(`
     <!DOCTYPE html>
     <html lang="ar" dir="rtl">
     <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>مرحباً بك</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         body {
           margin: 0;
@@ -29,7 +28,6 @@ app.get('/', (req, res) => {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           color: white;
           text-align: center;
-          animation: fadeIn 1s ease-in-out;
           flex-direction: column;
         }
 
@@ -58,33 +56,26 @@ app.get('/', (req, res) => {
           background-color: #3B82F6;
           color: #ffffff;
         }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
       </style>
     </head>
     <body>
-      <h1>أهلاً بك في سيرفر الروابط الديناميكية 🚀</h1>
-      <p>هنا يمكنك تجربة الانتقال إلى التطبيق الخاص بك بكل سهولة!</p>
-      <a class="button" href="/link">جرب الرابط الآن</a>
+      <h1>أهلاً بك في Fast Web Player 🚀</h1>
+      <p>اضغط لتجربة فتح تطبيقك مباشرة</p>
+      <a class="button" href="/link?studentId=123">جرب الرابط الآن</a>
     </body>
     </html>
-    `);
+  `);
 });
 
-
-// Deep Link route
+// Deep Link Route
 app.get('/link', (req, res) => {
     const studentId = req.query.studentId || 'unknown';
-
     const deepLink = `${process.env.DEEP_LINK_SCHEME}?studentId=${studentId}`;
     const fallbackUrl = process.env.FALLBACK_URL;
 
-    const html = `
-  <!DOCTYPE html>
-  <html lang="en">
+    res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
     <head>
       <meta charset="UTF-8">
       <title>Redirecting...</title>
@@ -139,11 +130,12 @@ app.get('/link', (req, res) => {
       <h3>جاري فتح التطبيق...</h3>
       <div class="spinner"></div>
     </body>
-  </html>
-  `;
-
-    res.send(html);
+    </html>
+  `);
 });
 
-// Export the app
-module.exports = app;
+// Local Development Server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+});
