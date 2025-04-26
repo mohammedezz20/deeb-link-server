@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.example.fast_web_player",
+            "sha256_cert_fingerprints": [
+                "4C:02:D5:9C:43:5F:65:B0:6F:24:BC:05:F7:5D:11:30:12:24:4B:CB:22:A1:DC:36:E8:63:C7:C6:1B:35:38:B9"
+            ]
+        }
+    }
+]

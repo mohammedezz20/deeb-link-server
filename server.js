@@ -1,15 +1,28 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
+const morgan = require('morgan'); // أضفنا morgan للـ Logs
+
 dotenv.config();
 
 const app = express();
 
+// إضافة Middleware لـ Morgan لتسجيل الـ HTTP Requests
+app.use(morgan('dev')); // 'dev' يعطيك Logs مختصرة وملونة (مناسبة للاختبار)
+
+// Middleware لتحليل الـ Query Parameters وJSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Log بتاع الـ Environment Variables عشان نتأكد إنها شغالة
+console.log('Environment Variables:');
+console.log(`DEEP_LINK_SCHEME: ${process.env.DEEP_LINK_SCHEME}`);
+console.log(`FALLBACK_URL: ${process.env.FALLBACK_URL}`);
+
 // Root Route (styled welcome page)
 app.get('/', (req, res) => {
-    res.send(`
+  console.log('Received request to Root Route (/)');
+  res.send(`
     <!DOCTYPE html>
     <html lang="ar" dir="rtl">
     <head>
@@ -69,11 +82,17 @@ app.get('/', (req, res) => {
 
 // Deep Link Route
 app.get('/link', (req, res) => {
-    const studentId = req.query.studentId || 'unknown';
-    const deepLink = `${process.env.DEEP_LINK_SCHEME}?studentId=${studentId}`;
-    const fallbackUrl = process.env.FALLBACK_URL;
+  console.log('Received request to Deep Link Route (/link)');
+  const studentId = req.query.studentId || 'unknown';
+  const deepLink = `${process.env.DEEP_LINK_SCHEME}?studentId=${studentId}`;
+  const fallbackUrl = process.env.FALLBACK_URL;
 
-    res.send(`
+  // Log بتاع الـ Query Parameters والروابط
+  console.log(`Student ID: ${studentId}`);
+  console.log(`Generated Deep Link: ${deepLink}`);
+  console.log(`Fallback URL: ${fallbackUrl}`);
+
+  res.send(`
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -116,11 +135,14 @@ app.get('/link', (req, res) => {
 
         window.onload = function () {
           if (isMobile()) {
+            console.log("Detected Mobile Device, redirecting to Deep Link...");
             window.location.href = "${deepLink}";
             setTimeout(function () {
+              console.log("Deep Link failed, redirecting to Fallback URL...");
               window.location.href = "${fallbackUrl}";
             }, 1500);
           } else {
+            console.log("Detected Non-Mobile Device, redirecting to Fallback URL...");
             window.location.href = "${fallbackUrl}";
           }
         }
@@ -134,8 +156,21 @@ app.get('/link', (req, res) => {
   `);
 });
 
-// Local Development Server
+// Serve assetlinks.json for App Links
+app.get('/.well-known/assetlinks.json', (req, res) => {
+  console.log('Received request for assetlinks.json (/.well-known/assetlinks.json)');
+  try {
+    res.sendFile(path.join(__dirname, '.well-known/assetlinks.json'));
+    console.log('Successfully served assetlinks.json');
+  } catch (error) {
+    console.error('Error serving assetlinks.json:', error.message);
+    res.status(500).send('Error serving assetlinks.json');
+  }
+});
+
+// Export the app for Railway
+module.exports = app;
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
