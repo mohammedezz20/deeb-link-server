@@ -1,14 +1,14 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const path = require('path');
-const morgan = require('morgan'); // أضفنا morgan للـ Logs
+const morgan = require('morgan');
 
 dotenv.config();
 
 const app = express();
 
 // إضافة Middleware لـ Morgan لتسجيل الـ HTTP Requests
-app.use(morgan('dev')); // 'dev' يعطيك Logs مختصرة وملونة (مناسبة للاختبار)
+app.use(morgan('dev'));
 
 // Middleware لتحليل الـ Query Parameters وJSON
 app.use(express.urlencoded({ extended: true }));
@@ -18,6 +18,7 @@ app.use(express.json());
 console.log('Environment Variables:');
 console.log(`DEEP_LINK_SCHEME: ${process.env.DEEP_LINK_SCHEME}`);
 console.log(`FALLBACK_URL: ${process.env.FALLBACK_URL}`);
+console.log(`WINDOWS_FALLBACK_URL: ${process.env.FALLBACK_URL}`);
 
 // Root Route (styled welcome page)
 app.get('/', (req, res) => {
@@ -86,11 +87,13 @@ app.get('/link', (req, res) => {
   const studentId = req.query.studentId || 'unknown';
   const deepLink = `${process.env.DEEP_LINK_SCHEME}?studentId=${studentId}`;
   const fallbackUrl = process.env.FALLBACK_URL;
+  const windowsFallbackUrl = process.env.WINDOWS_FALLBACK_URL || fallbackUrl;
 
   // Log بتاع الـ Query Parameters والروابط
   console.log(`Student ID: ${studentId}`);
   console.log(`Generated Deep Link: ${deepLink}`);
   console.log(`Fallback URL: ${fallbackUrl}`);
+  console.log(`Windows Fallback URL: ${windowsFallbackUrl}`);
 
   res.send(`
     <!DOCTYPE html>
@@ -134,17 +137,15 @@ app.get('/link', (req, res) => {
         }
 
         window.onload = function () {
-          if (isMobile()) {
-            console.log("Detected Mobile Device, redirecting to Deep Link...");
-            window.location.href = "${deepLink}";
-            setTimeout(function () {
-              console.log("Deep Link failed, redirecting to Fallback URL...");
-              window.location.href = "${fallbackUrl}";
-            }, 1500);
-          } else {
-            console.log("Detected Non-Mobile Device, redirecting to Fallback URL...");
-            window.location.href = "${fallbackUrl}";
-          }
+          var fallbackUrl = isMobile() ? "${fallbackUrl}" : "${windowsFallbackUrl}";
+          console.log("User Agent: ", navigator.userAgent);
+          console.log("Is Mobile: ", isMobile());
+          console.log("Attempting to open Deep Link: ${deepLink}");
+          window.location.href = "${deepLink}";
+          setTimeout(function () {
+            console.log("Deep Link failed, redirecting to Fallback URL: " + fallbackUrl);
+            window.location.href = fallbackUrl;
+          }, 1500);
         }
       </script>
     </head>
